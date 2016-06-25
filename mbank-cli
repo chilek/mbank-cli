@@ -354,6 +354,12 @@ my %locale_aliases = (
     'slovak' => 'sk',
 );
 
+my %tz_to_language = (
+    'Europe/Bratislava' => 'sk',
+    'Europe/Prague' => 'cz',
+    'Europe/Warsaw' => 'pl',
+);
+
 my @known_countries = keys(%country_to_language);
 
 sub guess_country
@@ -372,6 +378,21 @@ sub guess_country
     my @cc = keys(%cc);
     if (scalar(@cc) == 1) {
         my ($cc) = @cc;
+        return $cc;
+    }
+    if (scalar(@cc) == 0) {
+        my $tz = $ENV{TZ};
+        if (not defined($tz)) {
+            my $tz_path = '/etc/timezone';
+            open(my $fh, '<', $tz_path)
+                or return;
+            $tz = <$fh>;
+            close($fh)
+                or os_error("$tz_path: $ERRNO");
+            chomp($tz);
+        }
+        $tz =~ s/\A://;
+        my $cc = $tz_to_language{$tz};
         return $cc;
     }
     return;
